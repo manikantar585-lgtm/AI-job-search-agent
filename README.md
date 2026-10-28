@@ -64,6 +64,14 @@ python -m app.cli digest --resume resume.pdf --queries "genai engineer,ml engine
 
 Add a repository secret `RESUME_TEXT` containing your resume as plain text. `.github/workflows/daily-digest.yml` then runs every day at 8:00 IST and uploads `digest.md` as an artifact.
 
+## Deploy (Render, free)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/manikantar585-lgtm/AI-job-search-agent)
+
+`render.yaml` defines a free web service called `jobpilot-ai`. Click the button (or **New → Blueprint** in Render and pick this repo), optionally fill in `LLM_API_KEY` / Adzuna keys, and deploy. The app comes up at `https://jobpilot-ai.onrender.com` (or a suffixed name if that's taken).
+
+The free tier has no persistent disk, so the SQLite profile and tracker reset when the service restarts or sleeps. The Dockerfile also works on any container host (Railway, Fly.io, Cloud Run) and honours `$PORT`.
+
 ## Tests
 
 ```bash
