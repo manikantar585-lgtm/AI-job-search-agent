@@ -1,0 +1,22 @@
+ARJUN SHARMA
+Hyderabad, India | arjun.sample@example.com | +91 90000 00001
+
+SUMMARY
+Final-year B.Tech (AI & ML) student who builds GenAI and machine learning applications.
+
+EXPERIENCE
+Full Stack Developer Intern, Example Health Tech, Hyderabad    Jul 2026 - Oct 2026
+- Built features for a radiology image viewer using React.js, Node.js, Express and SQL Server
+- Designed REST APIs and improved report loading time with caching
+
+PROJECTS
+- RAG Coaching Chatbot: built a retrieval-augmented generation assistant with BM25 + embeddings, FastAPI and citations
+- AI Clinic Booking Assistant: LLM-powered appointment bot in English and Telugu with WhatsApp integration, Python and SQLite
+- ViT Defect Detection: hybrid Vision Transformer + CNN model in PyTorch for real-time industrial defect detection
+- Voice Avatar: text-to-speech and LLM pipeline with prompt engineering
+
+SKILLS
+Python, SQL, JavaScript, Machine Learning, Deep Learning, PyTorch, Scikit-learn, Pandas, NumPy, LangChain, Hugging Face, FAISS, Docker, Git, Linux
+
+EDUCATION
+B.Tech, Computer Science (AI & ML), Example Engineering College, 2023 - 2027, CGPA 7.8

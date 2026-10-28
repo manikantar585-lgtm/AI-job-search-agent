@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Job Search Agent</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1f1e1b; --muted:#6f6c64; --brand:#c2410c; --brand-ink:#fff; --line:#e7e4dd; --good:#15803d; --mid:#b45309; --bad:#b91c1c; --chip:#f1eee8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141311; --card:#1d1c19; --ink:#efece6; --muted:#a29e94; --brand:#fb923c; --brand-ink:#1c0d02; --line:#2e2c27; --good:#4ade80; --mid:#fbbf24; --bad:#f87171; --chip:#2a2824; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .wrap { max-width:1000px; margin:0 auto; padding:16px; }
+  h1 { font-size:20px; margin:4px 0 2px; } .sub { color:var(--muted); margin:0 0 14px; }
+  nav { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  nav button { border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:999px; padding:7px 14px; font:inherit; cursor:pointer; }
+  nav button.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  section { display:none; } section.on { display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 4px; }
+  input, textarea, select { width:100%; font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); }
+  textarea { min-height:70px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; } .row > * { flex:1; min-width:160px; }
+  button.p { background:var(--brand); color:var(--brand-ink); border:0; border-radius:8px; padding:9px 16px; font:inherit; font-weight:600; cursor:pointer; flex:0 0 auto; }
+  button.s { background:transparent; border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:6px 10px; font:inherit; font-size:13px; cursor:pointer; }
+  .chip { display:inline-block; background:var(--chip); border-radius:999px; padding:2px 9px; margin:2px 3px 2px 0; font-size:12px; }
+  .chip.miss { outline:1px dashed var(--bad); background:transparent; }
+  .job { display:grid; grid-template-columns:62px 1fr; gap:12px; }
+  .score { font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; text-align:center; border-radius:10px; padding:8px 0; border:2px solid; }
+  .score small { display:block; font-size:10px; font-weight:500; }
+  .s-good { color:var(--good); } .s-mid { color:var(--mid); } .s-bad { color:var(--bad); }
+  .job h3 { margin:0; font-size:15px; } .meta { color:var(--muted); font-size:13px; }
+  .bars { display:flex; gap:10px; flex-wrap:wrap; font-size:11px; color:var(--muted); margin-top:6px; }
+  .bar { width:70px; } .bar i { display:block; height:4px; border-radius:2px; background:var(--line); margin-top:2px; overflow:hidden; } .bar i b { display:block; height:100%; background:var(--brand); }
+  pre { white-space:pre-wrap; font:inherit; background:var(--chip); padding:10px; border-radius:8px; margin:8px 0 0; }
+  .steps li { margin-bottom:6px; } .steps code { background:var(--chip); padding:1px 6px; border-radius:4px; }
+  .msg { color:var(--muted); margin:6px 0; }
+  .board { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+  .col h4 { margin:0 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .tcard { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px; font-size:13px; }
+  .tcard select { margin-top:6px; padding:4px 6px; font-size:12px; }
+  .due { color:var(--bad); font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AI Job Search Agent</h1>
+  <p class="sub">Upload your resume → find and rank jobs → get cover letters → track applications.</p>
+  <nav id="tabs"><button data-t="profile" class="on">1. Profile</button><button data-t="search">2. Search</button><button data-t="agent">3. Agent</button><button data-t="tracker">4. Tracker</button></nav>
+
+  <section id="profile" class="on">
+    <div class="card">
+      <div class="row"><input id="resume" type="file" accept=".pdf,.txt,.md"><button class="p" id="upload">Read resume</button></div>
+      <p class="msg" id="pmsg">Your resume is parsed for skills, experience and suggested roles. You can edit everything below.</p>
+      <div class="row">
+        <div><label>Name</label><input id="name"></div>
+        <div><label>Years of experience</label><input id="years" type="number" step="0.1" min="0"></div>
+      </div>
+      <label>Skills (comma separated)</label><textarea id="skills"></textarea>
+      <label>Target roles</label><input id="roles" placeholder="GenAI Engineer, Machine Learning Engineer">
+      <div class="row">
+        <div><label>Preferred locations</label><input id="locs" placeholder="Hyderabad, Bengaluru"></div>
+        <div><label>Job types (empty = any)</label><input id="types" placeholder="full_time, internship"></div>
+        <div><label>Remote OK?</label><select id="remote"><option value="true">Yes</option><option value="false">No</option></select></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="p" id="saveP">Save profile</button></div>
+    </div>
+  </section>
+
+  <section id="search">
+    <div class="card row">
+      <input id="q" placeholder="e.g. genai engineer, machine learning intern, data analyst">
+      <button class="p" id="go">Search</button>
+    </div>
+    <p class="msg" id="smsg"></p>
+    <div id="gaps"></div>
+    <div id="results"></div>
+  </section>
+
+  <section id="agent">
+    <div class="card">
+      <label>Tell the agent what you want</label>
+      <div class="row"><input id="goal" value="Find me GenAI engineer jobs in Hyderabad or remote, draft cover letters for the best ones"><button class="p" id="run">Run agent</button></div>
+      <p class="msg" id="amsg">The agent searches, inspects the best jobs, writes cover letters, saves them to your tracker and checks skill gaps.</p>
+    </div>
+    <div id="aout"></div>
+  </section>
+
+  <section id="tracker"><div class="board" id="board"></div></section>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+const list = s => s.split(',').map(x => x.trim()).filter(Boolean);
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: opts.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }, ...opts });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button, section').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); $(b.dataset.t).classList.add('on');
+  if (b.dataset.t === 'tracker') loadTracker();
+});
+
+function fillProfile(p) {
+  $('name').value = p.name || ''; $('years').value = p.years_experience || 0; $('skills').value = (p.skills || []).join(', ');
+  $('roles').value = (p.target_roles || []).join(', '); $('locs').value = (p.locations || []).join(', ');
+  $('types').value = (p.job_types || []).join(', '); $('remote').value = String(p.remote_ok !== false);
+}
+api('/api/profile').then(fillProfile);
+$('upload').onclick = async () => {
+  const f = $('resume').files[0]; if (!f) { $('pmsg').textContent = 'Choose a PDF or TXT resume first.'; return; }
+  const fd = new FormData(); fd.append('file', f); $('pmsg').textContent = 'Reading…';
+  try { const p = await api('/api/profile/resume', { method:'POST', body: fd }); fillProfile(p); $('pmsg').textContent = `Found ${p.skills.length} skills and ${p.years_experience} years of experience. Check and save.`; }
+  catch (e) { $('pmsg').textContent = e.message; }
+};
+$('saveP').onclick = async () => {
+  try {
+    await api('/api/profile', { method:'PUT', body: JSON.stringify({ name: $('name').value, years_experience: +$('years').value || 0, skills: list($('skills').value),
+      target_roles: list($('roles').value), locations: list($('locs').value), job_types: list($('types').value), remote_ok: $('remote').value === 'true' }) });
+    $('pmsg').textContent = 'Saved. Go to Search or Agent.';
+  } catch (e) { $('pmsg').textContent = e.message; }
+};
+
+const cls = s => s >= 70 ? 's-good' : s >= 50 ? 's-mid' : 's-bad';
+function jobCard(r) {
+  const j = r.job, m = r.match, c = el('div', 'card job');
+  const sc = el('div', 'score ' + cls(m.score), m.score); sc.appendChild(el('small', null, m.verdict)); c.appendChild(sc);
+  const body = el('div'); c.appendChild(body);
+  const h = el('h3'); const a = el('a', null, j.title); a.href = j.url; a.target = '_blank'; a.rel = 'noopener'; a.style.color = 'inherit'; h.appendChild(a); body.appendChild(h);
+  body.appendChild(el('div', 'meta', [j.company, j.location, j.remote ? 'Remote' : '', j.salary, j.posted_at, j.source].filter(Boolean).join(' · ')));
+  const chips = el('div'); m.matched_skills.forEach(s => chips.appendChild(el('span', 'chip', s))); m.missing_skills.forEach(s => chips.appendChild(el('span', 'chip miss', s))); body.appendChild(chips);
+  const bars = el('div', 'bars');
+  for (const [k, v] of Object.entries(m.breakdown)) { const b = el('div', 'bar', k); const i = el('i'); const f = el('b'); f.style.width = (v * 100) + '%'; i.appendChild(f); b.appendChild(i); bars.appendChild(b); }
+  body.appendChild(bars);
+  if (m.notes.length) body.appendChild(el('div', 'meta', m.notes.join(' · ')));
+  const act = el('div', 'row'); act.style.marginTop = '8px'; act.style.justifyContent = 'flex-start';
+  const out = el('div');
+  const bCover = el('button', 's', 'Cover letter'); bCover.style.flex = '0 0 auto';
+  bCover.onclick = async () => { bCover.disabled = true; try { const x = await api(`/api/jobs/${encodeURIComponent(j.id)}/cover-letter`, { method:'POST' }); out.innerHTML = ''; out.appendChild(el('pre', null, x.cover_letter)); out.appendChild(el('pre', null, 'LinkedIn note: ' + x.recruiter_message)); } finally { bCover.disabled = false; } };
+  const bSave = el('button', 's', r.tracked ? 'In tracker: ' + r.tracked : 'Save to tracker'); bSave.style.flex = '0 0 auto';
+  bSave.onclick = async () => { await api('/api/tracker', { method:'POST', body: JSON.stringify({ job_id: j.id }) }); bSave.textContent = 'Saved ✓'; };
+  act.append(bCover, bSave); body.append(act, out);
+  return c;
+}
+$('go').onclick = async () => {
+  const q = $('q').value.trim(); if (!q) return;
+  $('smsg').textContent = 'Searching job boards…'; $('results').innerHTML = ''; $('gaps').innerHTML = '';
+  try {
+    const r = await api('/api/search', { method:'POST', body: JSON.stringify({ query: q }) });
+    $('smsg').textContent = `${r.count} jobs, ranked by fit. Solid chips = skills you have, dashed = skills you're missing.`;
+    if (r.skill_gaps.length) { const g = el('div', 'card'); g.appendChild(el('b', null, 'Most-requested skills you are missing: ')); r.skill_gaps.forEach(s => g.appendChild(el('span', 'chip miss', `${s.skill} (${s.jobs})`))); $('gaps').appendChild(g); }
+    r.results.slice(0, 30).forEach(x => $('results').appendChild(jobCard(x)));
+  } catch (e) { $('smsg').textContent = e.message; }
+};
+$('q').addEventListener('keydown', e => { if (e.key === 'Enter') $('go').click(); });
+
+$('run').onclick = async () => {
+  $('amsg').textContent = 'Agent is working… (searching, ranking, writing)'; $('aout').innerHTML = '';
+  try {
+    const r = await api('/api/agent', { method:'POST', body: JSON.stringify({ goal: $('goal').value }) });
+    $('amsg').textContent = '';
+    const s = el('div', 'card'); s.appendChild(el('b', null, 'Summary')); s.appendChild(el('pre', null, r.summary)); $('aout').appendChild(s);
+    const st = el('div', 'card'); st.appendChild(el('b', null, `What the agent did (${r.steps.length} steps)`)); const ol = el('ol', 'steps');
+    r.steps.forEach(x => { const li = el('li'); li.appendChild(el('code', null, x.tool)); li.appendChild(document.createTextNode(' ' + (x.args.query || x.args.job_id || '') + ' → ' + x.result)); ol.appendChild(li); });
+    st.appendChild(ol); $('aout').appendChild(st);
+    r.shortlist.forEach(x => { const c = el('div', 'card'); c.appendChild(el('b', null, `${x.title} · ${x.company} · ${x.score}/100`)); if (x.cover_letter) c.appendChild(el('pre', null, x.cover_letter)); $('aout').appendChild(c); });
+  } catch (e) { $('amsg').textContent = e.message; }
+};
+
+async function loadTracker() {
+  const t = await api('/api/tracker'); const b = $('board'); b.innerHTML = '';
+  for (const s of t.statuses) {
+    const col = el('div', 'col'); const items = t.items.filter(i => i.status === s);
+    col.appendChild(el('h4', null, `${s} (${items.length})`));
+    for (const i of items) {
+      const c = el('div', 'tcard'); c.appendChild(el('b', null, i.job.title)); c.appendChild(el('div', 'meta', `${i.job.company} · ${i.score}/100`));
+      if (t.due_follow_ups.includes(i.job_id)) c.appendChild(el('div', 'due', 'Follow-up due'));
+      else if (i.follow_up) c.appendChild(el('div', 'meta', 'Follow up: ' + i.follow_up));
+      const sel = el('select'); t.statuses.forEach(o => { const op = el('option', null, o); op.selected = o === s; sel.appendChild(op); });
+      sel.onchange = async () => { await api('/api/tracker', { method:'POST', body: JSON.stringify({ job_id: i.job_id, status: sel.value }) }); loadTracker(); };
+      c.appendChild(sel); col.appendChild(c);
+    }
+    b.appendChild(col);
+  }
+}
+</script>
+</body>
+</html>

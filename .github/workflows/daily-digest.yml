@@ -1,0 +1,22 @@
+# Writes a daily job digest (digest.md) as a downloadable artifact.
+# Put your resume text in the RESUME_TEXT repository secret to enable it.
+name: daily-job-digest
+on:
+  schedule: [{ cron: "30 2 * * *" }]   # 08:00 IST
+  workflow_dispatch:
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: printf '%s' "$RESUME_TEXT" > resume.txt
+        env: { RESUME_TEXT: "${{ secrets.RESUME_TEXT }}" }
+      - run: python -m app.cli digest --resume resume.txt --location Hyderabad --out digest.md
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+      - uses: actions/upload-artifact@v4
+        with: { name: job-digest, path: digest.md }
